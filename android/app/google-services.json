@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "825678600993",
+    "project_id": "motowsweb",
+    "storage_bucket": "motowsweb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825678600993:android:96fd70dba68c6f913f3c60",
+        "android_client_info": {
+          "package_name": "com.example.firebasefunction"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "825678600993-bmlde261ggo8j5aab1llk61ku927l4s7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAm77tJVJh4iMR9UtsSUqbWnBWwg2D4gJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "825678600993-bmlde261ggo8j5aab1llk61ku927l4s7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "825678600993-4jsr1u526elujlo78o3g7sqqcs022nrq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.motowsWeb"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825678600993:android:5021316707752f743f3c60",
+        "android_client_info": {
+          "package_name": "com.example.motows_web"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "825678600993-bmlde261ggo8j5aab1llk61ku927l4s7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAm77tJVJh4iMR9UtsSUqbWnBWwg2D4gJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "825678600993-bmlde261ggo8j5aab1llk61ku927l4s7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "825678600993-4jsr1u526elujlo78o3g7sqqcs022nrq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.motowsWeb"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
