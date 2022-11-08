@@ -1,12 +1,101 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  await setupFlutterNotifications();
+  showFlutterNotification(message);
+  // If you're going to use other Firebase services in the background, such as Firestore,
+  // make sure you call `initializeApp` before using other Firebase services.
+  print('Handling a background message ${message.data}');
+}
+
+/// Create a [AndroidNotificationChannel] for heads up notifications
+late AndroidNotificationChannel channel;
+
+bool isFlutterLocalNotificationsInitialized = false;
+
+Future<void> setupFlutterNotifications() async {
+  if (isFlutterLocalNotificationsInitialized) {
+    return;
+  }
+  channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications',description:
+      'This channel is used for important notifications.');
+
+  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  /// Create an Android Notification Channel.
+  ///
+  /// We use this channel in the `AndroidManifest.xml` file to override the
+  /// default FCM channel to enable heads up notifications.
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  /// Update the iOS foreground notification presentation options to allow
+  /// heads up notifications.
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+  isFlutterLocalNotificationsInitialized = true;
+}
+
+void showFlutterNotification(RemoteMessage message) {
+  var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      Constants.DEF_NOTIF_CHANNEL,
+      Constants.DEF_NOTIF_CHANNEL,
+      );
+
+  RemoteNotification? notification = message.notification;
+  AndroidNotification? android = message.notification?.android;
+
+  var platformChannelSpecifics =
+  NotificationDetails(android: androidPlatformChannelSpecifics);
+  if (true) {
+    var notifTitle = message.data["title"];
+    var notifBody = message.data["message"];
+     flutterLocalNotificationsPlugin.show(
+      0,
+     "fIREBASE fUNCTION",
+      "EXaMpLe",
+      platformChannelSpecifics,
+    );
+    // flutterLocalNotificationsPlugin.show(
+    //   notification.hashCode,
+    //   notification.title,
+    //   notification.body,
+    //   NotificationDetails(
+    //     android: androidPlatformChannelSpecifics
+    //   ),
+    // );
+  }
+}
+
+/// Initialize the [FlutterLocalNotificationsPlugin] package.
+late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(const MyApp());
 }
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -54,7 +143,40 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  String token='';
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    FirebaseMessaging.instance
+        .getToken()
+        .then((token1) {
+          print("Fcm Token: $token1");
+          token=token1!;
+    });
+  }
+
+
+
   void _incrementCounter() {
+     users.doc() // <-- Document ID
+        .set({
+      'name': "sathya",
+      'fcmToken': token,
+
+    }).then((value) {
+      print("+++++++++++++++++++++++++++++++++");
+      print("Success Adding Data");
+    } )
+        .catchError((error) {
+          print(error);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    });
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -65,11 +187,55 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  _onFCMMessage(RemoteMessage message) {
+    print("FCM: onMessage: ${message.data}");
+    _sendLocalNotification(message);
+  }
+
+  _initialiseLocalNotification() async {
+    var initializationSettingsAndroid =
+    AndroidInitializationSettings('app_icon');
+    var initializationSettings =
+    InitializationSettings(android: initializationSettingsAndroid);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        );
+  }
+
+  Future _sendLocalNotification(RemoteMessage message) async {
+    print("_sendLocalNotification");
+    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        Constants.DEF_NOTIF_CHANNEL,
+        Constants.DEF_NOTIF_CHANNEL,
+       );
+    var platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+    var notifTitle = message.data["title"];
+    var notifBody = message.data["message"];
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      notifTitle,
+      notifBody,
+      platformChannelSpecifics,
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
-    FirebaseMessaging.instance
-        .getToken()
-        .then((token) => print("Fcm Token: $token"));
+
+    _initialiseLocalNotification();
+    FirebaseMessaging.onMessage.listen((message) {
+      _onFCMMessage(message);
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      print("FCM: onMessageOpenedApp: $message");
+    });
+
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -119,4 +285,22 @@ class _MyHomePageState extends State<MyHomePage> {
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+
+abstract class Constants {
+  static const PATH_START = "/startSession/7737486223";
+  static const PATH_STOP = "/stopSession/7737486223/";
+
+  static const DIALOG_ROUTE_OK_ALERT = "okalert";
+  static const DIALOG_ROUTE_LOADER = "loader";
+
+  static const String PREF_IS_WELCOMED = "PREF_IS_WELCOMED";
+
+  static const APP_BAR_HEIGHT = 56.0;
+  static const CHARGING_REFRESH_INTERVAL = 5;
+  static const ADMIN = "admin";
+  static const ACTIVITY_TIME_FORMAT = "dd-MM-yyyy HH:mm";
+
+  static const DEF_NOTIF_CHANNEL = "example";
 }
